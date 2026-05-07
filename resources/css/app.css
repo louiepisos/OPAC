@@ -1,0 +1,11 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui, sans-serif;
+  background: #f8f4ec;
+  color: #1a1410;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+button { cursor: pointer; font: inherit; }
+input, select { font: inherit; }
+@keyframes spin { to { transform: rotate(360deg); } }
