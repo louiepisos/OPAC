@@ -207,18 +207,15 @@ export default function AdminBooks({ user }) {
   async function returnOne(book) {
     try {
       await booksApi.returnCopy(book.book_id);
-      refreshBookAfterInventoryChange(book, 'Manual +1 complete. A printed copy was returned to available inventory.');
+      setNotice('Printed copy was returned to available inventory.');
+      loadBooks(page);
+      if (detail?.book_id === book.book_id) {
+        booksApi.get(book.book_id).then(setDetail).catch((e) => setError(e.message || 'Unable to refresh book details.'));
+      }
+      setNotice('Print slip generated and inventory updated.');
+      window.open(result.print_url, '_blank', 'noopener,noreferrer');
     } catch (e) {
       setError(e.message || 'Unable to return this printed copy.');
-    }
-  }
-
-  async function decreaseOne(book) {
-    try {
-      await booksApi.manualPrintCopy(book.book_id);
-      refreshBookAfterInventoryChange(book, 'Manual -1 complete. One available copy was marked as printed/out.');
-    } catch (e) {
-      setError(e.message || 'Unable to manually decrease available copies.');
     }
   }
 
@@ -280,15 +277,7 @@ export default function AdminBooks({ user }) {
                   disabled={(book.available_copies_count || 0) <= 0}
                   style={{ ...S.printButton, opacity: (book.available_copies_count || 0) > 0 ? 1 : 0.45 }}
                 >
-                  Print slip
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); decreaseOne(book); }}
-                  disabled={(book.available_copies_count || 0) <= 0}
-                  style={{ ...S.secondaryButton, opacity: (book.available_copies_count || 0) > 0 ? 1 : 0.45 }}
-                  title="Use when a user took/printed a book without using the system."
-                >
-                  Manual -1
+                  Print
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); returnOne(book); }}
@@ -296,7 +285,7 @@ export default function AdminBooks({ user }) {
                   style={{ ...S.secondaryButton, opacity: (book.borrowed_copies_count || 0) > 0 ? 1 : 0.45 }}
                   title="Use when a book comes back without a system slip."
                 >
-                  Manual +1
+                  Return printed
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); del(book.book_id); }} style={S.dangerButton}>Delete</button>
               </div>
@@ -500,7 +489,7 @@ export default function AdminBooks({ user }) {
         </div>
       )}
 
-      {detail && <BookDetailModal book={detail} onClose={() => setDetail(null)} onEdit={() => { openEdit(detail); setDetail(null); }} onReturn={() => returnOne(detail)} onPrint={() => printBook(detail)} onDecrease={() => decreaseOne(detail)} />}
+      {detail && <BookDetailModal book={detail} onClose={() => setDetail(null)} onEdit={() => { openEdit(detail); setDetail(null); }} onReturn={() => returnOne(detail)} onPrint={() => printBook(detail)} />}
     </div>
   );
 }
@@ -614,12 +603,11 @@ function Inventory({ book }) {
       <span>Total {total}</span>
       <span>Available {available}</span>
       <span>Printed {printed}</span>
-      {shelfLocation(book) && <span>Shelf {shelfLocation(book)}</span>}
     </div>
   );
 }
 
-function BookDetailModal({ book, onClose, onEdit, onReturn, onPrint, onDecrease }) {
+function BookDetailModal({ book, onClose, onEdit, onReturn, onPrint }) {
   return (
     <div style={S.overlay}>
       <div style={{ ...S.modal, maxWidth: 520 }} className="opac-modal-pop">
@@ -655,8 +643,7 @@ function BookDetailModal({ book, onClose, onEdit, onReturn, onPrint, onDecrease 
           <div style={S.modalFoot}>
             <button onClick={onClose} style={S.secondaryButton}>Close</button>
             <button onClick={onPrint} disabled={(book.available_copies_count || 0) <= 0} style={{ ...S.printButton, opacity: (book.available_copies_count || 0) > 0 ? 1 : 0.45 }}>Print slip</button>
-            <button onClick={onDecrease} disabled={(book.available_copies_count || 0) <= 0} style={S.secondaryButton}>Manual -1</button>
-            <button onClick={onReturn} disabled={(book.borrowed_copies_count || 0) <= 0} style={S.secondaryButton}>Manual +1</button>
+            <button onClick={onReturn} disabled={(book.borrowed_copies_count || 0) <= 0} style={S.secondaryButton}>Return printed</button>
             <button onClick={onEdit} style={S.primaryButton}>Edit</button>
           </div>
         </div>

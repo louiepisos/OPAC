@@ -89,7 +89,7 @@ export default function AdminHome({ setPage }) {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search title, author, ISBN, subject, publisher, or shelf..."
+          placeholder="Search title, author, ISBN, subject, or publisher..."
           style={S.searchInput}
         />
         <div style={S.bookGrid}>
@@ -97,7 +97,6 @@ export default function AdminHome({ setPage }) {
             <button key={book.book_id} onClick={() => { setPage('books'); }} style={S.bookCard} className="opac-hover-lift">
               <div style={S.bookTitle}>{book.title}</div>
               <div style={S.bookMeta}>{(book.authors || []).map((a) => a.name).join(', ') || 'Unknown author'}</div>
-              {book.shelf_location && <div style={S.bookMeta}>Shelf: {book.shelf_location}</div>}
               <div style={S.pillRow}>
                 <span style={S.pill}>{book.available_copies_count ?? 0} available</span>
                 <span style={S.pill}>{book.borrowed_copies_count ?? 0} printed</span>
