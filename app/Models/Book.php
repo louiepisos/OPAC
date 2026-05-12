@@ -13,10 +13,14 @@ class Book extends Model
 
     protected $fillable = [
         'title','subtitle','isbn','publisher_id',
-        'publication_year','edition','description','language','format',
+        'publication_year','published_date','edition','description',
+        'cover_image_url','language','format',
     ];
 
-    protected $casts = ['publication_year' => 'integer'];
+    protected $casts = [
+        'publication_year' => 'integer',
+        'published_date'   => 'date',
+    ];
 
     public function publisher(): BelongsTo
     {
@@ -43,6 +47,11 @@ class Book extends Model
     public function copies(): HasMany
     {
         return $this->hasMany(Copy::class, 'book_id', 'book_id');
+    }
+
+    public function printTransactions(): HasMany
+    {
+        return $this->hasMany(PrintTransaction::class, 'book_id', 'book_id');
     }
 
     public function scopeSearch(Builder $query, string $term): Builder

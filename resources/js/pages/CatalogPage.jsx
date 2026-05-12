@@ -31,7 +31,7 @@ export default function CatalogPage({ onSelectBook }) {
         <div style={S.statsBar}>
           {[['Total Books', stats.total_books], ['Authors', stats.total_authors], ['Copies', stats.total_copies], ['Available', stats.available_copies]].map(([label, val]) => (
             <div key={label} style={S.statCard}>
-              <div style={S.statVal}>{val?.toLocaleString() ?? 'â€”'}</div>
+              <div style={S.statVal}>{val?.toLocaleString() ?? '—'}</div>
               <div style={S.statLabel}>{label}</div>
             </div>
           ))}

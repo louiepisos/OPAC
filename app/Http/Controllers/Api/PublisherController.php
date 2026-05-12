@@ -12,7 +12,7 @@ class PublisherController extends Controller
     {
         $q = Publisher::withCount('books');
         if ($s = $request->query('q')) $q->where('name','like',"%{$s}%");
-        return response()->json($q->orderBy('name')->paginate(20));
+        return response()->json($q->orderBy('name')->paginate($request->query('per_page', 20)));
     }
 
     public function store(Request $request): JsonResponse

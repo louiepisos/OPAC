@@ -1,29 +1,38 @@
+import '../css/app.css';
 import React, { useState } from 'react';
-import CatalogPage    from './pages/CatalogPage';
-import BookDetailPage from './pages/BookDetailPage';
-import AuthorsPage    from './pages/AuthorsPage';
-import SubjectsPage   from './pages/SubjectsPage';
-import Header         from './components/Header';
+import ReactDOM from 'react-dom/client';
+import LoginPage  from './pages/LoginPage';
+import AdminShell from './pages/admin/AdminShell';
+import UserShell  from './pages/user/UserShell';
 
-export default function App() {
-  const [view, setView]     = useState('catalog');
-  const [selected, setBook] = useState(null);
+function App() {
+  const [auth, setAuth] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('opac_auth') || 'null'); }
+    catch { return null; }
+  });
 
-  function openBook(book) { setBook(book); setView('book'); }
-  function goBack()        { setView('catalog'); setBook(null); }
+  function login(data) {
+    sessionStorage.setItem('opac_auth', JSON.stringify(data));
+    setAuth(data);
+  }
+  function logout() {
+    sessionStorage.removeItem('opac_auth');
+    setAuth(null);
+  }
 
-  return (
-    <div style={{ minHeight: '100vh', background: '#f8f4ec', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <Header view={view} setView={setView} goBack={goBack} />
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1.5rem' }}>
-        {view === 'catalog'  && <CatalogPage    onSelectBook={openBook} />}
-        {view === 'book'     && <BookDetailPage book={selected} onBack={goBack} />}
-        {view === 'authors'  && <AuthorsPage />}
-        {view === 'subjects' && <SubjectsPage   onSelectBook={openBook} />}
-      </main>
-      <footer style={{ textAlign: 'center', padding: '1.5rem', fontSize: '.8rem', color: '#8a7f72', borderTop: '1px solid #ddd6c8' }}>
-        OPAC Â· Online Public Access Catalog Â· Laravel + React + PostgreSQL
-      </footer>
-    </div>
-  );
+  if (!auth)                 return <LoginPage  onLogin={login} />;
+  if (auth.role === 'admin') return <AdminShell user={auth} onLogout={logout} />;
+  return                            <UserShell  user={auth} onLogout={logout} />;
+}
+
+const el = document.getElementById('app');
+if (el) {
+  const root = ReactDOM.createRoot(el);
+  root.render(<React.StrictMode><App /></React.StrictMode>);
+  
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      // Cleanup on HMR
+    });
+  }
 }

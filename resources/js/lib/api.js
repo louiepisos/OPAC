@@ -1,57 +1,66 @@
-﻿const BASE = '/api/v1';
+const BASE = '/api/v1';
 
-async function request(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, {
+async function req(path, opts = {}) {
+  const res = await fetch(BASE + path, {
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    ...options,
+    ...opts,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.message ?? 'API error');
+  const text = await res.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { message: text || res.statusText };
   }
-  return res.json();
+  if (!res.ok) {
+    const validation = data.errors
+      ? Object.values(data.errors).flat().join(' ')
+      : '';
+    throw new Error(validation || data.message || res.statusText);
+  }
+  return data;
 }
 
 export const booksApi = {
-  list:   (p = {}) => request('/books?' + new URLSearchParams(p)),
-  get:    (id)     => request(`/books/${id}`),
-  create: (d)      => request('/books', { method: 'POST', body: JSON.stringify(d) }),
-  update: (id, d)  => request(`/books/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
-  delete: (id)     => request(`/books/${id}`, { method: 'DELETE' }),
+  list:   (p = {}) => req('/books?' + new URLSearchParams(p)),
+  get:    (id)     => req(`/books/${id}`),
+  create: (d)      => req('/books',  { method: 'POST',   body: JSON.stringify(d) }),
+  update: (id, d)  => req(`/books/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+  delete: (id)     => req(`/books/${id}`, { method: 'DELETE' }),
+  returnCopy: (id) => req(`/books/${id}/return-copy`, { method: 'POST' }),
 };
-
 export const authorsApi = {
-  list:   (p = {}) => request('/authors?' + new URLSearchParams(p)),
-  get:    (id)     => request(`/authors/${id}`),
-  create: (d)      => request('/authors', { method: 'POST', body: JSON.stringify(d) }),
-  update: (id, d)  => request(`/authors/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
-  delete: (id)     => request(`/authors/${id}`, { method: 'DELETE' }),
+  list:   (p = {}) => req('/authors?' + new URLSearchParams(p)),
+  get:    (id)     => req(`/authors/${id}`),
+  create: (d)      => req('/authors', { method: 'POST', body: JSON.stringify(d) }),
+  update: (id, d)  => req(`/authors/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+  delete: (id)     => req(`/authors/${id}`, { method: 'DELETE' }),
 };
-
 export const publishersApi = {
-  list:   (p = {}) => request('/publishers?' + new URLSearchParams(p)),
-  create: (d)      => request('/publishers', { method: 'POST', body: JSON.stringify(d) }),
-  update: (id, d)  => request(`/publishers/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
-  delete: (id)     => request(`/publishers/${id}`, { method: 'DELETE' }),
+  list:   (p = {}) => req('/publishers?' + new URLSearchParams(p)),
+  create: (d)      => req('/publishers', { method: 'POST', body: JSON.stringify(d) }),
+  update: (id, d)  => req(`/publishers/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+  delete: (id)     => req(`/publishers/${id}`, { method: 'DELETE' }),
 };
-
 export const subjectsApi = {
-  list:   ()    => request('/subjects'),
-  create: (d)   => request('/subjects', { method: 'POST', body: JSON.stringify(d) }),
-  delete: (id)  => request(`/subjects/${id}`, { method: 'DELETE' }),
+  list: () => req('/subjects'),
 };
-
-export const seriesApi = {
-  list:   ()    => request('/series'),
-  create: (d)   => request('/series', { method: 'POST', body: JSON.stringify(d) }),
-  delete: (id)  => request(`/series/${id}`, { method: 'DELETE' }),
+export const isbnApi = {
+  lookup: (isbn) => req(`/isbn/${encodeURIComponent(isbn)}`),
 };
-
-export const copiesApi = {
-  list:         (p = {}) => request('/copies?' + new URLSearchParams(p)),
-  create:       (d)      => request('/copies', { method: 'POST', body: JSON.stringify(d) }),
-  updateStatus: (id, st) => request(`/copies/${id}`, { method: 'PATCH', body: JSON.stringify({ status: st }) }),
-  delete:       (id)     => request(`/copies/${id}`, { method: 'DELETE' }),
+export const printSlipsApi = {
+  list:   (p = {}) => req('/print-transactions?' + new URLSearchParams(p)),
+  create: (bookId, d) => req(`/books/${bookId}/print-slip`, { method: 'POST', body: JSON.stringify(d) }),
 };
-
-export const statsApi = { get: () => request('/stats') };
+export const statsApi = {
+  get: () => req('/stats'),
+};
+export const usersApi = {
+  list:   (p = {}) => req('/users?' + new URLSearchParams(p)),
+  create: (d)      => req('/users', { method: 'POST', body: JSON.stringify(d) }),
+  delete: (id)     => req(`/users/${id}`, { method: 'DELETE' }),
+};
+export const authApi = {
+  login:    (d) => req('/auth/login',    { method: 'POST', body: JSON.stringify(d) }),
+  register: (d) => req('/auth/register', { method: 'POST', body: JSON.stringify(d) }),
+};

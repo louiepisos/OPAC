@@ -22,7 +22,7 @@ export default function Header({ view, setView, goBack }) {
     <header style={S.header}>
       <div style={S.inner}>
         <button style={S.brand} onClick={goBack}>
-          <span style={{ fontSize: '1.8rem' }}>ðŸ“–</span>
+          <span style={{ fontSize: '1.8rem' }}>MENU</span>
           <span>
             <div style={S.title}>OPAC</div>
             <div style={S.sub}>Online Public Access Catalog</div>

@@ -12,7 +12,7 @@ class AuthorController extends Controller
     {
         $q = Author::withCount('books');
         if ($s = $request->query('q')) $q->where('name','like',"%{$s}%");
-        return response()->json($q->orderBy('name')->paginate(20));
+        return response()->json($q->orderBy('name')->paginate($request->query('per_page', 20)));
     }
 
     public function show(int $id): JsonResponse
@@ -27,6 +27,7 @@ class AuthorController extends Controller
             'birth_date'  => 'nullable|date',
             'death_date'  => 'nullable|date',
             'author_type' => 'required|in:Personal,Corporate',
+            'bio'         => 'nullable|string|max:2000',
         ])), 201);
     }
 
@@ -38,6 +39,7 @@ class AuthorController extends Controller
             'birth_date'  => 'nullable|date',
             'death_date'  => 'nullable|date',
             'author_type' => 'sometimes|in:Personal,Corporate',
+            'bio'         => 'nullable|string|max:2000',
         ]));
         return response()->json($a);
     }

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Author extends Model
 {
     protected $primaryKey = 'author_id';
-    protected $fillable   = ['name', 'birth_date', 'death_date', 'author_type'];
+    protected $fillable   = ['name', 'birth_date', 'death_date', 'author_type', 'bio'];
     protected $casts      = ['birth_date' => 'date', 'death_date' => 'date'];
 
     public function books(): BelongsToMany
