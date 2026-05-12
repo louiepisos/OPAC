@@ -197,13 +197,13 @@ function BookDetailModal({ book, user, onClose, onPrinted, onError }) {
 function Availability({ book, large = false }) {
   const total = book.total_copies_count ?? book.copies_count ?? book.copies?.length ?? 0;
   const available = book.available_copies_count ?? (book.copies?.filter((copy) => copy.status === 'Available').length ?? 0);
-  const borrowed = book.borrowed_copies_count ?? (book.copies?.filter((copy) => copy.status === 'Checked Out').length ?? 0);
+  const printed = book.printed_copies_count ?? book.borrowed_copies_count ?? (book.copies?.filter((copy) => copy.status === 'Checked Out').length ?? 0);
 
   return (
     <div style={{ ...S.availability, ...(large ? { justifyContent: 'center', padding: '8px 10px' } : {}) }}>
       <span style={{ color: available > 0 ? '#15803d' : '#b91c1c' }}>{available > 0 ? `${available} available` : 'Unavailable'}</span>
       <span>Total {total}</span>
-      {borrowed > 0 && <span>{borrowed} borrowed</span>}
+      {printed > 0 && <span>{printed} printed</span>}
     </div>
   );
 }

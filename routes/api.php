@@ -48,6 +48,7 @@ Route::prefix('v1')->group(function () {
             'total_copies'     => \App\Models\Copy::count(),
             'available_copies' => \App\Models\Copy::where('status','Available')->count(),
             'borrowed_copies'  => \App\Models\Copy::where('status','Checked Out')->count(),
+            'printed_copies'   => \App\Models\Copy::where('status','Checked Out')->count(),
             'print_slips'      => \App\Models\PrintTransaction::count(),
             'formats'          => \App\Models\Book::selectRaw('format, count(*) as count')
                                     ->groupBy('format')->pluck('count','format'),
