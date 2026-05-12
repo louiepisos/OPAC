@@ -103,6 +103,7 @@ export default function UserHome({ user }) {
               <div style={S.cardBody}>
                 <div style={S.bookTitle}>{book.title}</div>
                 <div style={S.bookAuthor}>{(book.authors || []).map((a) => a.name).join(', ') || 'Unknown author'}</div>
+                {shelfLocation(book) && <div style={S.shelfText}>Shelf: {shelfLocation(book)}</div>}
                 <Availability book={book} />
               </div>
             </div>
@@ -170,6 +171,7 @@ function BookDetailModal({ book, user, onClose, onPrinted, onError }) {
               ['Year', book.publication_year],
               ['Format', book.format],
               ['Language', book.language],
+              ['Shelf location', shelfLocation(book)],
             ].filter(([, value]) => value).map(([label, value]) => (
               <div key={label} style={S.infoCell}>
                 <div style={S.infoLabel}>{label}</div>
@@ -194,16 +196,21 @@ function BookDetailModal({ book, user, onClose, onPrinted, onError }) {
   );
 }
 
+function shelfLocation(book) {
+  if (book.shelf_location) return book.shelf_location;
+  return (book.copies || []).find((copy) => copy.location)?.location || '';
+}
+
 function Availability({ book, large = false }) {
   const total = book.total_copies_count ?? book.copies_count ?? book.copies?.length ?? 0;
   const available = book.available_copies_count ?? (book.copies?.filter((copy) => copy.status === 'Available').length ?? 0);
-  const borrowed = book.borrowed_copies_count ?? (book.copies?.filter((copy) => copy.status === 'Checked Out').length ?? 0);
+  const printed = book.printed_copies_count ?? book.borrowed_copies_count ?? (book.copies?.filter((copy) => copy.status === 'Checked Out').length ?? 0);
 
   return (
     <div style={{ ...S.availability, ...(large ? { justifyContent: 'center', padding: '8px 10px' } : {}) }}>
       <span style={{ color: available > 0 ? '#15803d' : '#b91c1c' }}>{available > 0 ? `${available} available` : 'Unavailable'}</span>
       <span>Total {total}</span>
-      {borrowed > 0 && <span>{borrowed} borrowed</span>}
+      {printed > 0 && <span>{printed} printed</span>}
     </div>
   );
 }
@@ -276,6 +283,7 @@ const S = {
   cardBody: { padding: '9px 10px' },
   bookTitle: { fontSize: 12, fontWeight: 700, color: '#1a202c', lineHeight: 1.35 },
   bookAuthor: { fontSize: 10, color: '#2563eb' },
+  shelfText: { fontSize: 10, color: '#92400e', marginTop: 4, fontWeight: 800 },
   availability: { display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 7, fontSize: 10, fontWeight: 700, color: '#64748b' },
   empty: { gridColumn: '1/-1', textAlign: 'center', color: '#94a3b8', padding: 48, fontSize: 12 },
   overlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 500, padding: 16 },

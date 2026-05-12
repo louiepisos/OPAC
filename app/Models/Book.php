@@ -17,10 +17,26 @@ class Book extends Model
         'cover_image_url','language','format',
     ];
 
+    protected $appends = ['shelf_location'];
+
     protected $casts = [
         'publication_year' => 'integer',
         'published_date'   => 'date',
     ];
+
+    public function getShelfLocationAttribute(): ?string
+    {
+        $copies = $this->relationLoaded('copies')
+            ? $this->copies
+            : $this->copies()->get(['copy_id', 'book_id', 'status', 'location']);
+
+        $available = $copies->first(fn ($copy) => $copy->status === 'Available' && filled($copy->location));
+        if ($available) {
+            return $available->location;
+        }
+
+        return optional($copies->first(fn ($copy) => filled($copy->location)))->location;
+    }
 
     public function publisher(): BelongsTo
     {
@@ -60,6 +76,7 @@ class Book extends Model
             $q->where('title', 'like', "%{$term}%")
               ->orWhere('subtitle', 'like', "%{$term}%")
               ->orWhere('isbn', 'like', "%{$term}%")
+              ->orWhereHas('copies', fn($c) => $c->where('location', 'like', "%{$term}%"))
               ->orWhereHas('authors', fn($a) => $a->where('name', 'like', "%{$term}%"))
               ->orWhereHas('subjects', fn($s) => $s->where('subject_name', 'like', "%{$term}%"))
               ->orWhereHas('publisher', fn($p) => $p->where('name', 'like', "%{$term}%"));

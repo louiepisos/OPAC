@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Spinner from '../components/Spinner';
 
+function shelfLocation(book) {
+  if (book.shelf_location) return book.shelf_location;
+  return (book.copies || []).find((copy) => copy.location)?.location || '';
+}
+
 function LargeCover({ isbn, title, format, coverImage }) {
   const [imgError, setImgError] = useState(false);
   const coverUrl = !imgError
@@ -80,7 +85,7 @@ export default function BookDetailPage({ book: initial, onBack }) {
           {book.description && <p style={S.desc}>{book.description}</p>}
           <table style={S.table}>
             <tbody>
-              {[['ISBN', book.isbn], ['Publisher', book.publisher?.name], ['Year', book.publication_year], ['Edition', book.edition], ['Language', book.language], ['Format', book.format]]
+              {[['ISBN', book.isbn], ['Publisher', book.publisher?.name], ['Year', book.publication_year], ['Edition', book.edition], ['Language', book.language], ['Format', book.format], ['Shelf location', shelfLocation(book)]]
                 .filter(([, v]) => v)
                 .map(([k, v]) => (
                   <tr key={k}>

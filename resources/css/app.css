@@ -9,3 +9,67 @@ body {
 button { cursor: pointer; font: inherit; }
 input, select { font: inherit; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes opacFadeSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes opacScaleIn {
+  from { opacity: 0; transform: scale(.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.opac-page-transition,
+.opac-fade-in {
+  animation: opacFadeSlideIn .28s ease both;
+}
+
+.opac-modal-pop {
+  animation: opacScaleIn .2s ease both;
+}
+
+.opac-nav-button:hover {
+  transform: translateX(2px);
+  background: rgba(255,255,255,.08) !important;
+  color: #fff !important;
+}
+
+.opac-hover-lift:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15,39,68,.08);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition: background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .16s ease, opacity .2s ease;
+}
+
+button:hover:not(:disabled),
+a:hover {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled),
+a:active {
+  transform: translateY(0);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+  }
+}

@@ -16,7 +16,7 @@ class PrintSlipController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = PrintTransaction::with(['book.authors', 'copy'])
+        $query = PrintTransaction::with(['book.authors', 'copy', 'user'])
             ->latest('printed_at')
             ->latest('print_transaction_id');
 
@@ -25,6 +25,23 @@ class PrintSlipController extends Controller
         }
         if ($userId = $request->query('user_id')) {
             $query->where('user_id', $userId);
+        }
+        if ($term = trim((string) $request->query('q', ''))) {
+            $query->where(function ($q) use ($term) {
+                $q->where('slip_number', 'like', "%{$term}%")
+                    ->orWhere('requester_name', 'like', "%{$term}%")
+                    ->orWhere('requester_email', 'like', "%{$term}%")
+                    ->orWhere('student_id', 'like', "%{$term}%")
+                    ->orWhereHas('book', function ($bookQuery) use ($term) {
+                        $bookQuery->where('title', 'like', "%{$term}%")
+                            ->orWhere('isbn', 'like', "%{$term}%");
+                    })
+                    ->orWhereHas('copy', fn ($copyQuery) => $copyQuery->where('barcode', 'like', "%{$term}%"))
+                    ->orWhereHas('user', function ($userQuery) use ($term) {
+                        $userQuery->where('name', 'like', "%{$term}%")
+                            ->orWhere('email', 'like', "%{$term}%");
+                    });
+            });
         }
 
         return response()->json($query->paginate($request->query('per_page', 20)));

@@ -4,6 +4,7 @@ import AdminDashboard from './AdminDashboard';
 import AdminBooks     from './AdminBooks';
 import AdminAuthors   from './AdminAuthors';
 import AdminStudents  from './AdminStudents';
+import AdminPrintHistory from './AdminPrintHistory';
 
 const NAVY = '#0f2744';
 
@@ -33,18 +34,24 @@ const ICONS = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
     </svg>
   ),
+  prints: (
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{width:15,height:15,flexShrink:0}}>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/>
+    </svg>
+  ),
 };
 
 const NAV = [
   { id:'home',      label:'Home',           section:'Main'    },
   { id:'dashboard', label:'Dashboard',       section:''        },
   { id:'books',     label:'Manage Books',    section:'Library' },
+  { id:'prints',    label:'Print History',    section:''        },
   { id:'authors',   label:'Authors',         section:''        },
   { id:'students',  label:'Manage Students', section:''        },
 ];
 const TITLES = {
   home:'Admin Home', dashboard:'Dashboard',
-  books:'Manage Books', authors:'Authors',
+  books:'Manage Books', prints:'Print Slip History', authors:'Authors',
   students:'Manage Students',
 };
 
@@ -82,7 +89,9 @@ export default function AdminShell({ user, onLogout }) {
                     background: active ? 'rgba(46,204,138,.15)' : 'transparent',
                     borderLeft: active ? '2px solid #2ecc8a' : '2px solid transparent',
                     fontSize:12, fontWeight:500, textAlign:'left', fontFamily:'inherit',
+                    transition:'background .2s ease, color .2s ease, transform .16s ease, border-color .2s ease',
                   }}
+                  className="opac-nav-button"
                 >
                   {ICONS[n.id]}
                   {n.label}
@@ -111,11 +120,14 @@ export default function AdminShell({ user, onLogout }) {
         </div>
         {/* Page content */}
         <div style={{ flex:1, overflowY:'auto', padding:20, background:'#f4f6fa' }}>
-          {page === 'home'      && <AdminHome      setPage={setPage} />}
-          {page === 'dashboard' && <AdminDashboard />}
-          {page === 'books'     && <AdminBooks />}
-          {page === 'authors'   && <AdminAuthors />}
-          {page === 'students'  && <AdminStudents />}
+          <div key={page} className="opac-page-transition">
+            {page === 'home'      && <AdminHome      setPage={setPage} />}
+            {page === 'dashboard' && <AdminDashboard />}
+            {page === 'books'     && <AdminBooks user={user} />}
+            {page === 'prints'    && <AdminPrintHistory />}
+            {page === 'authors'   && <AdminAuthors />}
+            {page === 'students'  && <AdminStudents />}
+          </div>
         </div>
       </div>
     </div>
