@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { authorsApi, booksApi, isbnApi, subjectsApi } from '../../lib/api';
+import { authorsApi, booksApi, isbnApi, printSlipsApi, subjectsApi } from '../../lib/api';
 
 const EMPTY_FORM = {
   title: '',
@@ -20,7 +20,7 @@ const EMPTY_FORM = {
   subject_names_text: '',
 };
 
-export default function AdminBooks() {
+export default function AdminBooks({ user }) {
   const [books, setBooks] = useState([]);
   const [authors, setAuthors] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -39,6 +39,7 @@ export default function AdminBooks() {
 
   function loadBooks(p = page) {
     setLoading(true);
+    setError('');
     const params = { page: p, per_page: 9 };
     if (search) params.q = search;
     booksApi.list(params)
@@ -52,8 +53,8 @@ export default function AdminBooks() {
   }
 
   function loadLookups() {
-    authorsApi.list({ per_page: 200 }).then((r) => setAuthors(r.data || [])).catch(() => {});
-    subjectsApi.list().then(setSubjects).catch(() => {});
+    authorsApi.list({ per_page: 200 }).then((r) => setAuthors(r.data || [])).catch((e) => setError(e.message || 'Unable to load authors.'));
+    subjectsApi.list().then(setSubjects).catch((e) => setError(e.message || 'Unable to load categories.'));
   }
 
   useEffect(() => {
@@ -196,12 +197,36 @@ export default function AdminBooks() {
   async function returnOne(book) {
     try {
       await booksApi.returnCopy(book.book_id);
+      setNotice('Printed copy was returned to available inventory.');
       loadBooks(page);
       if (detail?.book_id === book.book_id) {
-        booksApi.get(book.book_id).then(setDetail).catch(() => {});
+        booksApi.get(book.book_id).then(setDetail).catch((e) => setError(e.message || 'Unable to refresh book details.'));
       }
     } catch (e) {
-      setError(e.message);
+      setError(e.message || 'Unable to return this printed copy.');
+    }
+  }
+
+  async function printBook(book) {
+    setError('');
+    setNotice('');
+    try {
+      const result = await printSlipsApi.create(book.book_id, {
+        user_id: user?.id || null,
+        requester_name: user?.name || 'Admin print',
+        requester_email: user?.email || null,
+        material_type: book.format || 'Book',
+      });
+      if (result.book) {
+        setBooks((prev) => prev.map((item) => (item.book_id === result.book.book_id ? { ...item, ...result.book } : item)));
+        setDetail((prev) => (prev?.book_id === result.book.book_id ? { ...prev, ...result.book } : prev));
+      } else {
+        loadBooks(page);
+      }
+      setNotice('Print slip generated and inventory updated.');
+      window.open(result.print_url, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      setError(e.message || 'Unable to print this book slip.');
     }
   }
 
@@ -210,12 +235,13 @@ export default function AdminBooks() {
       <div style={S.toolbar}>
         <div>
           <div style={S.title}>All Books ({meta.total || 0})</div>
-          <div style={S.subtle}>Track authors, metadata, and available copies.</div>
+          <div style={S.subtle}>Search, add, print, and track metadata and available copies.</div>
         </div>
         <button onClick={openAdd} style={S.primaryButton}>Add book</button>
       </div>
 
       {error && !modal && <div style={S.error}>{error}</div>}
+      {notice && !modal && <div style={S.notice}>{notice}</div>}
 
       <input
         value={search}
@@ -226,7 +252,7 @@ export default function AdminBooks() {
 
       <div style={S.grid}>
         {books.map((book) => (
-          <div key={book.book_id} style={S.card} onClick={() => booksApi.get(book.book_id).then(setDetail).catch(() => setDetail(book))}>
+          <div key={book.book_id} style={S.card} className="opac-hover-lift" onClick={() => booksApi.get(book.book_id).then(setDetail).catch((e) => { setError(e.message || 'Unable to load book details.'); setDetail(book); })}>
             <BookCover book={book} height={140} width={96} />
             <div style={S.cardBody}>
               <div style={S.bookTitle}>{book.title}</div>
@@ -235,11 +261,18 @@ export default function AdminBooks() {
               <div style={S.actions}>
                 <button onClick={(e) => { e.stopPropagation(); openEdit(book); }} style={S.secondaryButton}>Edit</button>
                 <button
+                  onClick={(e) => { e.stopPropagation(); printBook(book); }}
+                  disabled={(book.available_copies_count || 0) <= 0}
+                  style={{ ...S.printButton, opacity: (book.available_copies_count || 0) > 0 ? 1 : 0.45 }}
+                >
+                  Print
+                </button>
+                <button
                   onClick={(e) => { e.stopPropagation(); returnOne(book); }}
                   disabled={(book.borrowed_copies_count || 0) <= 0}
                   style={{ ...S.secondaryButton, opacity: (book.borrowed_copies_count || 0) > 0 ? 1 : 0.45 }}
                 >
-                  Return one
+                  Return printed
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); del(book.book_id); }} style={S.dangerButton}>Delete</button>
               </div>
@@ -264,7 +297,7 @@ export default function AdminBooks() {
 
       {modal && (
         <div style={S.overlay}>
-          <div style={S.modal}>
+          <div style={S.modal} className="opac-modal-pop">
             <div style={S.modalHead}>
               <div>
                 <h3 style={S.modalTitle}>{modal.mode === 'add' ? 'Add new book' : 'Edit book'}</h3>
@@ -428,7 +461,7 @@ export default function AdminBooks() {
         </div>
       )}
 
-      {detail && <BookDetailModal book={detail} onClose={() => setDetail(null)} onEdit={() => { openEdit(detail); setDetail(null); }} onReturn={() => returnOne(detail)} />}
+      {detail && <BookDetailModal book={detail} onClose={() => setDetail(null)} onEdit={() => { openEdit(detail); setDetail(null); }} onReturn={() => returnOne(detail)} onPrint={() => printBook(detail)} />}
     </div>
   );
 }
@@ -529,21 +562,21 @@ function BookCover({ book, height, width }) {
 function Inventory({ book }) {
   const total = book.total_copies_count ?? book.copies_count ?? 0;
   const available = book.available_copies_count ?? 0;
-  const borrowed = book.borrowed_copies_count ?? 0;
+  const printed = book.borrowed_copies_count ?? 0;
 
   return (
     <div style={S.inventory}>
       <span>Total {total}</span>
       <span>Available {available}</span>
-      <span>Borrowed {borrowed}</span>
+      <span>Printed {printed}</span>
     </div>
   );
 }
 
-function BookDetailModal({ book, onClose, onEdit, onReturn }) {
+function BookDetailModal({ book, onClose, onEdit, onReturn, onPrint }) {
   return (
     <div style={S.overlay}>
-      <div style={{ ...S.modal, maxWidth: 520 }}>
+      <div style={{ ...S.modal, maxWidth: 520 }} className="opac-modal-pop">
         <div style={S.modalHead}>
           <h3 style={S.modalTitle}>Book details</h3>
           <button onClick={onClose} style={S.iconButton}>x</button>
@@ -574,7 +607,8 @@ function BookDetailModal({ book, onClose, onEdit, onReturn }) {
           {book.description && <p style={S.description}>{book.description}</p>}
           <div style={S.modalFoot}>
             <button onClick={onClose} style={S.secondaryButton}>Close</button>
-            <button onClick={onReturn} disabled={(book.borrowed_copies_count || 0) <= 0} style={S.secondaryButton}>Return one</button>
+            <button onClick={onPrint} disabled={(book.available_copies_count || 0) <= 0} style={{ ...S.printButton, opacity: (book.available_copies_count || 0) > 0 ? 1 : 0.45 }}>Print slip</button>
+            <button onClick={onReturn} disabled={(book.borrowed_copies_count || 0) <= 0} style={S.secondaryButton}>Return printed</button>
             <button onClick={onEdit} style={S.primaryButton}>Edit</button>
           </div>
         </div>
@@ -588,7 +622,7 @@ const S = {
   title: { fontSize: 15, fontWeight: 700, color: '#1a202c' },
   subtle: { fontSize: 11, color: '#64748b' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 },
-  card: { display: 'flex', gap: 12, alignItems: 'stretch', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', cursor: 'pointer' },
+  card: { display: 'flex', gap: 12, alignItems: 'stretch', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', cursor: 'pointer', transition: 'transform .18s ease, box-shadow .18s ease, border-color .18s ease' },
   cardBody: { padding: 12, flex: 1, minWidth: 0 },
   bookTitle: { fontSize: 13, fontWeight: 700, color: '#1a202c', lineHeight: 1.35 },
   bookAuthor: { fontSize: 11, color: '#2563eb', marginTop: 3, minHeight: 16 },
@@ -598,6 +632,7 @@ const S = {
   input: { width: '100%', padding: '8px 10px', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, fontFamily: 'inherit', color: '#1a202c', outline: 'none', background: '#fff' },
   label: { display: 'block', fontSize: 10, fontWeight: 700, color: '#475569', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0 },
   primaryButton: { fontSize: 11, fontWeight: 700, padding: '8px 14px', borderRadius: 6, border: 'none', background: '#1a7a4a', color: '#fff', fontFamily: 'inherit' },
+  printButton: { fontSize: 11, fontWeight: 700, padding: '7px 10px', borderRadius: 6, border: 'none', background: '#f0a500', color: '#fff', fontFamily: 'inherit' },
   secondaryButton: { fontSize: 11, fontWeight: 700, padding: '7px 10px', borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', color: '#1f2937', fontFamily: 'inherit' },
   dangerButton: { fontSize: 11, fontWeight: 700, padding: '7px 10px', borderRadius: 6, border: 'none', background: '#dc2626', color: '#fff', fontFamily: 'inherit' },
   pageButton: { width: 28, height: 28, borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', color: '#475569', fontSize: 11, fontFamily: 'inherit' },
