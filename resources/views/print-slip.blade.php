@@ -13,50 +13,127 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reference Assistance Slip {{ $transaction->slip_number }}</title>
     <style>
-        @page { size: 74mm 105mm; margin: 0; }
+        @page { size: A6 landscape; margin: 0; }
         * { box-sizing: border-box; }
-        html, body { width: 74mm; min-height: 105mm; margin: 0; background: #fff; }
-        body { font-family: "Times New Roman", Times, serif; color: #111; }
+        html, body { margin: 0; background: #eef2f7; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            font-family: "Times New Roman", Times, serif;
+            color: #111;
+        }
         .slip {
-            width: 74mm;
+            width: 148mm;
             min-height: 105mm;
-            padding: 4mm;
+            padding: 4.5mm 5mm;
+            background: #fff;
             border: .35mm solid #111;
+            box-shadow: 0 16px 45px rgba(15, 39, 68, .18);
             position: relative;
         }
-        .top-rule { border-top: .25mm solid #111; padding-top: 2.5mm; }
-        .header { display: grid; grid-template-columns: 14mm 1fr 20mm; gap: 1.5mm; align-items: center; }
+        .top-rule { border-top: .25mm solid #111; padding-top: 2.2mm; }
+        .header {
+            display: grid;
+            grid-template-columns: 18mm 1fr 38mm;
+            gap: 3mm;
+            align-items: center;
+        }
         .logo {
-            width: 12mm; height: 10mm; border: .2mm solid #d7b34a; color: #b98b20;
-            font: 700 6pt Arial, sans-serif; display: flex; align-items: center; justify-content: center;
-            letter-spacing: .2mm;
+            width: 16mm;
+            height: 13mm;
+            border: .25mm solid #d7b34a;
+            color: #b98b20;
+            font: 700 8pt Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: .25mm;
         }
-        .school { text-align: center; font: 700 5.5pt Arial, sans-serif; line-height: 1.2; }
-        .campuses { font: 4.3pt Arial, sans-serif; font-weight: 400; margin-top: .8mm; }
-        .doc { border-collapse: collapse; width: 100%; font: 4pt Arial, sans-serif; }
-        .doc td { border: .15mm solid #111; padding: .45mm .55mm; line-height: 1.05; }
+        .school {
+            text-align: center;
+            font: 700 8pt Arial, sans-serif;
+            line-height: 1.18;
+            letter-spacing: .1mm;
+        }
+        .campuses { font: 5.4pt Arial, sans-serif; font-weight: 400; margin-top: 1mm; letter-spacing: 0; }
+        .doc { border-collapse: collapse; width: 100%; font: 5pt Arial, sans-serif; }
+        .doc td { border: .15mm solid #111; padding: .65mm .8mm; line-height: 1.1; }
         .doc .blue { background: #11365d; color: #fff; font-weight: 700; }
-        h1 { text-align: center; font-size: 9.5pt; margin: 5mm 0 2mm; letter-spacing: .1mm; }
-        .box { border: .22mm solid #111; padding: 2.5mm 3mm; min-height: 59mm; }
-        .prompt { font-size: 6.8pt; line-height: 1.25; margin-bottom: 2mm; }
-        .checks { white-space: nowrap; }
-        .field { display: grid; grid-template-columns: 19mm 1fr; gap: 1mm; align-items: end; margin: 2mm 0; }
-        .label { font-size: 7.2pt; font-weight: 700; text-transform: uppercase; }
-        .line {
-            border-bottom: .18mm solid #111; min-height: 4.2mm; font-size: 6.8pt;
-            overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding-left: .5mm;
+        h1 {
+            text-align: center;
+            font-size: 13pt;
+            margin: 4mm 0 2.5mm;
+            letter-spacing: .25mm;
         }
-        .bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-top: 4mm; }
-        .sig-title { font-size: 7pt; font-weight: 700; text-transform: uppercase; margin-bottom: 1mm; }
-        .sig-line { border-bottom: .18mm solid #111; height: 7mm; display: flex; align-items: end; justify-content: center; font-size: 6pt; overflow: hidden; }
-        .sig-caption { font-size: 5.6pt; text-align: center; line-height: 1.1; }
-        .date { margin-top: 2mm; display: grid; grid-template-columns: 8mm 1fr; gap: 1mm; font-size: 6pt; align-items: end; }
+        .box {
+            border: .22mm solid #111;
+            padding: 3mm 3.5mm;
+            min-height: 43mm;
+        }
+        .prompt { font-size: 8pt; line-height: 1.28; margin: 0 0 2.4mm; }
+        .checks { white-space: nowrap; }
+        .fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 5mm;
+            row-gap: 1.8mm;
+        }
+        .field { display: grid; grid-template-columns: 25mm 1fr; gap: 1.5mm; align-items: end; min-width: 0; }
+        .field-wide { grid-column: 1 / -1; }
+        .label { font-size: 8.3pt; font-weight: 700; text-transform: uppercase; }
+        .line {
+            border-bottom: .18mm solid #111;
+            min-height: 5mm;
+            font-size: 8pt;
+            line-height: 1.2;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            padding: 0 .75mm .45mm;
+        }
+        .bottom {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12mm;
+            margin-top: 4mm;
+        }
+        .sig-title { font-size: 8pt; font-weight: 700; text-transform: uppercase; margin-bottom: 1mm; }
+        .sig-line {
+            border-bottom: .18mm solid #111;
+            height: 7mm;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            font-size: 7.2pt;
+            overflow: hidden;
+            padding: 0 1mm .4mm;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .sig-caption { font-size: 6.3pt; text-align: center; line-height: 1.18; margin-top: .8mm; }
+        .date { margin-top: 1.4mm; display: grid; grid-template-columns: 10mm 1fr; gap: 1mm; font-size: 6.8pt; align-items: end; }
         .date div:last-child { border-bottom: .18mm solid #111; text-align: center; }
         .no-print { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); font: 13px Arial, sans-serif; }
-        .no-print button { padding: 8px 14px; border: 0; border-radius: 6px; background: #0f2744; color: #fff; font-weight: 700; }
+        .no-print button { padding: 9px 16px; border: 0; border-radius: 8px; background: #0f2744; color: #fff; font-weight: 700; box-shadow: 0 8px 18px rgba(15, 39, 68, .22); cursor: pointer; }
         @media print {
+            html, body {
+                width: 148mm;
+                min-height: 105mm;
+                background: #fff;
+                display: block;
+                padding: 0;
+            }
+            .slip {
+                width: 148mm;
+                min-height: 105mm;
+                box-shadow: none;
+                border-width: .35mm;
+                page-break-after: avoid;
+            }
             .no-print { display: none; }
-            .slip { border-width: .35mm; }
         }
     </style>
 </head>
@@ -83,11 +160,13 @@
                     What type of library materials do you need?<br>
                     Please Check: <span class="checks">({{ strtolower($transaction->material_type) === 'book' ? '/' : ' ' }}) Book&nbsp;&nbsp; ( ) Periodicals&nbsp;&nbsp; ( ) Thesis/Dissertation&nbsp;&nbsp; ( ) Others: ____</span>
                 </p>
-                <div class="field"><div class="label">Author:</div><div class="line">{{ $authors }}</div></div>
-                <div class="field"><div class="label">Title:</div><div class="line">{{ $book->title }}</div></div>
-                <div class="field"><div class="label">Subject/Topic:</div><div class="line">{{ $subjects }}</div></div>
-                <div class="field"><div class="label">Call Number:</div><div class="line">{{ $book->isbn ?: $transaction->slip_number }}</div></div>
-                <div class="field"><div class="label">Location:</div><div class="line">{{ optional($transaction->copy)->location ?: $publisher }}</div></div>
+                <div class="fields">
+                    <div class="field"><div class="label">Author:</div><div class="line">{{ $authors }}</div></div>
+                    <div class="field"><div class="label">Call Number:</div><div class="line">{{ $book->isbn ?: $transaction->slip_number }}</div></div>
+                    <div class="field field-wide"><div class="label">Title:</div><div class="line">{{ $book->title }}</div></div>
+                    <div class="field"><div class="label">Subject/Topic:</div><div class="line">{{ $subjects }}</div></div>
+                    <div class="field"><div class="label">Location:</div><div class="line">{{ optional($transaction->copy)->location ?: $publisher }}</div></div>
+                </div>
             </section>
             <section class="bottom">
                 <div>
@@ -104,7 +183,7 @@
             </section>
         </div>
     </main>
-    <div class="no-print"><button onclick="window.print()">Print slip</button></div>
+    <div class="no-print"><button onclick="window.print()">Print A6 landscape slip</button></div>
     @if ($autoPrint)
         <script>
             window.addEventListener('load', function () {
