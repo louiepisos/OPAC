@@ -50,6 +50,7 @@ function BookCover({ isbn, title, format, coverImage }) {
 export default function BookCard({ book, onClick }) {
   const available = book.available_copies_count ?? 0;
   const authors   = book.authors?.map(a => a.name).join(', ') || 'Unknown Author';
+  const shelf     = book.shelf_location || book.copies?.find((copy) => copy.location)?.location || '';
 
   return (
     <button onClick={onClick} style={S.card}>
@@ -59,6 +60,7 @@ export default function BookCard({ book, onClick }) {
         <h3 style={S.title}>{book.title}</h3>
         {book.subtitle && <p style={S.subtitle}>{book.subtitle}</p>}
         <p style={S.author}>{authors}</p>
+        {shelf && <div style={S.shelf}>Shelf: {shelf}</div>}
         <div style={S.meta}>
           {book.publication_year && <span>{book.publication_year}</span>}
           {book.isbn && <span>ISBN {book.isbn}</span>}
@@ -83,5 +85,6 @@ const S = {
   subtitle: { fontSize: '.8rem', color: '#6a5f52', fontStyle: 'italic', lineHeight: 1.3 },
   author:   { fontSize: '.84rem', color: '#5a4f42', marginTop: 'auto' },
   meta:     { display: 'flex', gap: '.5rem', fontSize: '.73rem', color: '#8a7f72', flexWrap: 'wrap' },
+  shelf:    { fontSize: '.75rem', color: '#92600a', fontWeight: 700 },
   badge:    { fontSize: '.73rem', fontWeight: 600, padding: '.25rem .6rem', borderRadius: 20, marginTop: '.5rem', display: 'inline-block' },
 };

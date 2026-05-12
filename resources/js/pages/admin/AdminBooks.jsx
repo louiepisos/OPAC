@@ -14,6 +14,7 @@ const EMPTY_FORM = {
   language: '',
   format: 'Print',
   copy_count: 1,
+  shelf_location: '',
   author_ids: [],
   author_names_text: '',
   author_details: [],
@@ -98,6 +99,7 @@ export default function AdminBooks({ user }) {
       language: book.language || '',
       format: book.format || 'Print',
       copy_count: book.total_copies_count ?? book.copies_count ?? book.copies?.length ?? 0,
+      shelf_location: shelfLocation(book),
       author_ids: (book.authors || []).map((a) => a.author_id),
       author_details: (book.authors || []).map((a) => ({
         name: a.name,
@@ -194,6 +196,14 @@ export default function AdminBooks({ user }) {
     }
   }
 
+  async function refreshBookAfterInventoryChange(book, message) {
+    setNotice(message);
+    loadBooks(page);
+    if (detail?.book_id === book.book_id) {
+      booksApi.get(book.book_id).then(setDetail).catch((e) => setError(e.message || 'Unable to refresh book details.'));
+    }
+  }
+
   async function returnOne(book) {
     try {
       await booksApi.returnCopy(book.book_id);
@@ -202,6 +212,8 @@ export default function AdminBooks({ user }) {
       if (detail?.book_id === book.book_id) {
         booksApi.get(book.book_id).then(setDetail).catch((e) => setError(e.message || 'Unable to refresh book details.'));
       }
+      setNotice('Print slip generated and inventory updated.');
+      window.open(result.print_url, '_blank', 'noopener,noreferrer');
     } catch (e) {
       setError(e.message || 'Unable to return this printed copy.');
     }
@@ -246,7 +258,7 @@ export default function AdminBooks({ user }) {
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search title, author, ISBN, subject, publisher..."
+        placeholder="Search title, author, ISBN, subject, publisher, shelf..."
         style={{ ...S.input, marginBottom: 14 }}
       />
 
@@ -271,6 +283,7 @@ export default function AdminBooks({ user }) {
                   onClick={(e) => { e.stopPropagation(); returnOne(book); }}
                   disabled={(book.borrowed_copies_count || 0) <= 0}
                   style={{ ...S.secondaryButton, opacity: (book.borrowed_copies_count || 0) > 0 ? 1 : 0.45 }}
+                  title="Use when a book comes back without a system slip."
                 >
                   Return printed
                 </button>
@@ -325,7 +338,7 @@ export default function AdminBooks({ user }) {
                 </div>
               </div>
               <div>
-                <label style={S.label}>Copies available</label>
+                <label style={S.label}>Total copies</label>
                 <input
                   style={S.input}
                   type="number"
@@ -370,6 +383,21 @@ export default function AdminBooks({ user }) {
                   <option>Ebook</option>
                   <option>Audio</option>
                 </select>
+              </div>
+            </div>
+
+            <div style={S.formGrid}>
+              <div>
+                <label style={S.label}>Shelf location</label>
+                <input
+                  style={S.input}
+                  value={form.shelf_location}
+                  onChange={(e) => setForm({ ...form, shelf_location: e.target.value })}
+                  placeholder="Shelf A-3, Row 2"
+                />
+              </div>
+              <div style={S.locationHint}>
+                This location is shown to users and applied to all copies of this book.
               </div>
             </div>
 
@@ -480,6 +508,7 @@ function payloadFromForm(form) {
     language: emptyToNull(form.language),
     format: form.format,
     copy_count: Math.max(0, Number(form.copy_count) || 0),
+    shelf_location: emptyToNull(form.shelf_location),
     author_ids: form.author_ids,
     author_names: parseList(form.author_names_text),
     author_details: detailsForNames(form.author_details, form.author_names_text),
@@ -513,6 +542,11 @@ function detailsForNames(details, text) {
       death_date: emptyToNull(detail.death_date),
       bio: emptyToNull(detail.bio),
     }));
+}
+
+function shelfLocation(book) {
+  if (book.shelf_location) return book.shelf_location;
+  return (book.copies || []).find((copy) => copy.location)?.location || '';
 }
 
 function dateRange(author) {
@@ -597,6 +631,7 @@ function BookDetailModal({ book, onClose, onEdit, onReturn, onPrint }) {
               ['Format', book.format],
               ['Language', book.language],
               ['Edition', book.edition],
+              ['Shelf location', shelfLocation(book)],
             ].filter(([, value]) => value).map(([label, value]) => (
               <div key={label} style={S.infoCell}>
                 <div style={S.label}>{label}</div>
@@ -657,4 +692,5 @@ const S = {
   description: { fontSize: 12, lineHeight: 1.65, color: '#475569', marginTop: 12 },
   authorPreview: { marginTop: 8, display: 'grid', gap: 6 },
   authorPreviewItem: { border: '1px solid #e2e8f0', borderRadius: 6, padding: 8, fontSize: 11, color: '#475569', display: 'grid', gap: 2 },
+  locationHint: { display: 'flex', alignItems: 'center', minHeight: 36, fontSize: 11, lineHeight: 1.45, color: '#64748b', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 6, padding: '8px 10px' },
 };

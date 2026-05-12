@@ -27,6 +27,7 @@ export const booksApi = {
   create: (d)      => req('/books',  { method: 'POST',   body: JSON.stringify(d) }),
   update: (id, d)  => req(`/books/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
   delete: (id)     => req(`/books/${id}`, { method: 'DELETE' }),
+  manualPrintCopy: (id) => req(`/books/${id}/manual-print-copy`, { method: 'POST' }),
   returnCopy: (id) => req(`/books/${id}/return-copy`, { method: 'POST' }),
 };
 export const authorsApi = {

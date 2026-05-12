@@ -16,7 +16,7 @@ class BookController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Book::with(['authors','publisher','subjects','series'])
+        $query = Book::with(['authors','publisher','subjects','series','copies'])
             ->withCount([
                 'copies as total_copies_count',
                 'copies as available_copies_count' => fn($q) => $q->where('status','Available'),
@@ -64,6 +64,7 @@ class BookController extends Controller
             'cover_image_url'  => 'nullable|string|max:1000',
             'language'         => 'nullable|string|max:50',
             'format'           => 'required|in:Print,Ebook,Audio',
+            'shelf_location'   => 'nullable|string|max:255',
             'copy_count'       => 'nullable|integer|min:0|max:10000',
             'author_ids'       => 'array',
             'author_ids.*'     => 'exists:authors,author_id',
@@ -88,7 +89,7 @@ class BookController extends Controller
             $this->syncAuthors($book, $v);
             $this->syncSubjects($book, $v);
             $book->series()->sync($v['series_ids'] ?? []);
-            $this->syncCopiesToTarget($book, array_key_exists('copy_count', $v) ? (int) $v['copy_count'] : 1);
+            $this->syncCopiesToTarget($book, array_key_exists('copy_count', $v) ? (int) $v['copy_count'] : 1, $v['shelf_location'] ?? null);
 
             return $book;
         });
@@ -116,6 +117,7 @@ class BookController extends Controller
             'cover_image_url'  => 'nullable|string|max:1000',
             'language'         => 'nullable|string|max:50',
             'format'           => 'sometimes|in:Print,Ebook,Audio',
+            'shelf_location'   => 'nullable|string|max:255',
             'copy_count'       => 'nullable|integer|min:0|max:10000',
             'author_ids'       => 'array','author_ids.*' => 'exists:authors,author_id',
             'author_names'     => 'array','author_names.*' => 'string|max:255',
@@ -140,7 +142,10 @@ class BookController extends Controller
             }
             if (isset($v['series_ids']))  $book->series()->sync($v['series_ids']);
             if (array_key_exists('copy_count', $v)) {
-                $this->syncCopiesToTarget($book, (int) $v['copy_count']);
+                $this->syncCopiesToTarget($book, (int) $v['copy_count'], $v['shelf_location'] ?? null);
+            }
+            if (array_key_exists('shelf_location', $v)) {
+                $this->syncCopyLocation($book, $v['shelf_location']);
             }
         });
 
@@ -151,6 +156,25 @@ class BookController extends Controller
     {
         Book::findOrFail($id)->delete();
         return response()->json(['message' => 'Book deleted.']);
+    }
+
+    public function manualPrintCopy(int $id): JsonResponse
+    {
+        $book = Book::findOrFail($id);
+        $copy = $book->copies()
+            ->where('status', 'Available')
+            ->oldest('copy_id')
+            ->first();
+
+        if (!$copy) {
+            throw ValidationException::withMessages([
+                'copy' => 'This book has no available copies to decrease.',
+            ]);
+        }
+
+        $copy->update(['status' => 'Checked Out']);
+
+        return response()->json($this->bookWithInventory($book->book_id));
     }
 
     public function returnCopy(int $id): JsonResponse
@@ -299,14 +323,21 @@ class BookController extends Controller
         $book->subjects()->sync($ids->unique()->values()->all());
     }
 
-    private function syncCopiesToTarget(Book $book, int $target): void
+    private function syncCopiesToTarget(Book $book, int $target, ?string $location = null): void
     {
         $current = $book->copies()->count();
         if ($target > $current) {
             for ($i = 0; $i < $target - $current; $i++) {
-                Copy::create(['book_id' => $book->book_id, 'status' => 'Available']);
+                Copy::create(['book_id' => $book->book_id, 'status' => 'Available', 'location' => $location]);
+            }
+            if ($location !== null) {
+                $this->syncCopyLocation($book, $location);
             }
             return;
+        }
+
+        if ($location !== null) {
+            $this->syncCopyLocation($book, $location);
         }
 
         if ($target < $current) {
@@ -327,6 +358,11 @@ class BookController extends Controller
                 $copy->delete();
             }
         }
+    }
+
+    private function syncCopyLocation(Book $book, ?string $location): void
+    {
+        $book->copies()->update(['location' => $location]);
     }
 
     private function publisherIdFromName(?string $name): ?int

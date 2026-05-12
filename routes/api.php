@@ -18,6 +18,7 @@ Route::prefix('v1')->group(function () {
     Route::get('isbn/{isbn}', [IsbnLookupController::class, 'show']);
 
     Route::apiResource('books',      BookController::class);
+    Route::post('books/{id}/manual-print-copy', [BookController::class, 'manualPrintCopy']);
     Route::post('books/{id}/return-copy', [BookController::class, 'returnCopy']);
     Route::post('books/{id}/print-slip',  [PrintSlipController::class, 'store']);
     Route::apiResource('authors',    AuthorController::class);
