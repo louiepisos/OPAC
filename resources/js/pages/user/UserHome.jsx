@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { authorsApi, booksApi, printSlipsApi, subjectsApi } from '../../lib/api';
 
 export default function UserHome({ user }) {
@@ -151,7 +152,7 @@ function BookDetailModal({ book, user, onClose, onPrinted, onError }) {
     }
   }
 
-  return (
+  return createPortal(
     <div style={S.overlay}>
       <div style={S.modal}>
         <div style={S.modalHead}>
@@ -192,7 +193,8 @@ function BookDetailModal({ book, user, onClose, onPrinted, onError }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -286,7 +288,7 @@ const S = {
   shelfText: { fontSize: 10, color: '#92400e', marginTop: 4, fontWeight: 800 },
   availability: { display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 7, fontSize: 10, fontWeight: 700, color: '#64748b' },
   empty: { gridColumn: '1/-1', textAlign: 'center', color: '#94a3b8', padding: 48, fontSize: 12 },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 500, padding: 16 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 16 },
   modal: { background: '#fff', borderRadius: 8, padding: 20, width: '100%', maxWidth: 460, boxShadow: '0 20px 60px rgba(0,0,0,.2)', maxHeight: '90vh', overflowY: 'auto' },
   modalHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
   modalTitle: { fontSize: 14, fontWeight: 700, margin: 0 },

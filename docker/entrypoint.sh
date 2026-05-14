@@ -60,9 +60,7 @@ if [ ! -d node_modules ] || [ ! -x node_modules/.bin/vite ]; then
     run_or_warn 'Installing npm dependencies' npm ci
 fi
 
-if [ ! -f public/build/manifest.json ]; then
-    run_or_warn 'Building frontend assets' npm run build
-fi
+run_or_warn 'Building frontend assets' npm run build
 
 if [ -f artisan ] && [ -f vendor/autoload.php ]; then
     if ! grep -Eq '^APP_KEY=base64:.+' .env 2>/dev/null; then

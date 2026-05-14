@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { authorsApi, booksApi, isbnApi, printSlipsApi, subjectsApi } from '../../lib/api';
 
 const EMPTY_FORM = {
@@ -309,8 +310,9 @@ export default function AdminBooks({ user }) {
       )}
 
       {modal && (
-        <div style={S.overlay}>
-          <div style={S.modal} className="opac-modal-pop">
+        <ModalPortal>
+          <div style={S.overlay}>
+            <div style={S.modal} className="opac-modal-pop">
             <div style={S.modalHead}>
               <div>
                 <h3 style={S.modalTitle}>{modal.mode === 'add' ? 'Add new book' : 'Edit book'}</h3>
@@ -485,8 +487,9 @@ export default function AdminBooks({ user }) {
               <button onClick={() => setModal(null)} style={S.secondaryButton}>Cancel</button>
               <button onClick={save} disabled={saving || fetchingIsbn} style={S.primaryButton}>{saving ? 'Saving...' : 'Save book'}</button>
             </div>
+            </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {detail && <BookDetailModal book={detail} onClose={() => setDetail(null)} onEdit={() => { openEdit(detail); setDetail(null); }} onReturn={() => returnOne(detail)} onPrint={() => printBook(detail)} />}
@@ -607,8 +610,12 @@ function Inventory({ book }) {
   );
 }
 
+function ModalPortal({ children }) {
+  return createPortal(children, document.body);
+}
+
 function BookDetailModal({ book, onClose, onEdit, onReturn, onPrint }) {
-  return (
+  return createPortal(
     <div style={S.overlay}>
       <div style={{ ...S.modal, maxWidth: 520 }} className="opac-modal-pop">
         <div style={S.modalHead}>
@@ -648,7 +655,8 @@ function BookDetailModal({ book, onClose, onEdit, onReturn, onPrint }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -674,7 +682,7 @@ const S = {
   pageActive: { background: '#0f2744', color: '#fff' },
   pagination: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 0' },
   empty: { gridColumn: '1/-1', textAlign: 'center', color: '#64748b', padding: 36, fontSize: 12 },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 500, padding: 16 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 16 },
   modal: { background: '#fff', borderRadius: 8, padding: 20, width: '100%', maxWidth: 760, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,.22)' },
   modalHead: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 },
   modalTitle: { fontSize: 15, fontWeight: 700, color: '#1a202c', margin: 0 },
