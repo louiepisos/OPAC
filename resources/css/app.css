@@ -21,11 +21,11 @@ input, select { font: inherit; }
 
 .opac-page-transition,
 .opac-fade-in {
-  animation: opacFadeSlideIn .28s ease both;
+  animation: opacFadeSlideIn .28s ease backwards;
 }
 
 .opac-modal-pop {
-  animation: opacScaleIn .2s ease both;
+  animation: opacScaleIn .2s ease backwards;
 }
 
 .opac-nav-button:hover {
