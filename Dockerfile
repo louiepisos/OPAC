@@ -24,7 +24,8 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN a2enmod rewrite \
     && sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
     && sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf \
-    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}/!g' /etc/apache2/apache2.conf
+    && printf 'ServerName localhost\n' > /etc/apache2/conf-available/server-name.conf \
+    && a2enconf server-name
 
 WORKDIR /var/www/html
 
@@ -40,7 +41,8 @@ RUN composer dump-autoload --no-interaction --optimize \
     && chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/entrypoint.sh /usr/local/bin/opac-entrypoint
-RUN chmod +x /usr/local/bin/opac-entrypoint
+RUN sed -i 's/\r$//' /usr/local/bin/opac-entrypoint \
+    && chmod +x /usr/local/bin/opac-entrypoint
 
 EXPOSE 80
 

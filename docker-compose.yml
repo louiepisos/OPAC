@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: opac-app
-    restart: unless-stopped
+    restart: on-failure:3
     ports:
       - "8080:80"
     environment:
