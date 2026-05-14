@@ -11,12 +11,12 @@ input, select { font: inherit; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes opacFadeSlideIn {
   from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes opacScaleIn {
   from { opacity: 0; transform: scale(.985); }
-  to { opacity: 1; transform: scale(1); }
+  to { opacity: 1; transform: none; }
 }
 
 .opac-page-transition,
