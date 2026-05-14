@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { authorsApi } from '../../lib/api';
 
 const EMPTY_AUTHOR = {
@@ -169,7 +170,7 @@ export default function AdminAuthors() {
         </div>
       )}
 
-      {modal && (
+      {modal && createPortal(
         <div style={S.overlay}>
           <div style={S.modal}>
             <div style={S.modalHead}>
@@ -213,7 +214,8 @@ export default function AdminAuthors() {
               <button onClick={save} disabled={saving} style={S.primaryButton}>{saving ? 'Saving...' : 'Save author'}</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -253,7 +255,7 @@ const S = {
   secondaryButton: { fontSize: 11, fontWeight: 700, padding: '7px 10px', borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', color: '#1f2937', fontFamily: 'inherit' },
   dangerButton: { fontSize: 11, fontWeight: 700, padding: '7px 10px', borderRadius: 6, border: 'none', background: '#dc2626', color: '#fff', fontFamily: 'inherit' },
   empty: { textAlign: 'center', color: '#64748b', padding: 28, fontSize: 12 },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 500, padding: 16 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(15,23,42,.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: 16 },
   modal: { background: '#fff', borderRadius: 8, padding: 20, width: '100%', maxWidth: 520, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,.22)' },
   modalHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 },
   modalTitle: { fontSize: 15, fontWeight: 700, color: '#1a202c', margin: 0 },
